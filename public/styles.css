@@ -1,0 +1,184 @@
+body { 
+    margin: 0; 
+    padding: 0;
+    overflow: hidden; /* This stops the scrollbar */
+    width: 100vw; 
+    height: 100vh; 
+    font-family: 'Arial', sans-serif;
+ }
+
+/* The 3D Canvas goes to the back */
+#webgl-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; }
+
+/* The UI sits on top */
+#ui-layer { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh; 
+    z-index: 10; 
+    pointer-events: none;
+}
+/* Utility class to hide things */
+.hidden { display: none !important; }
+
+/* The Sidebar Palette */
+.sidebar {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 250px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    pointer-events: auto; /* Re-enable clicks for the sidebar */
+    overflow: hidden;
+}
+
+.palette-header {
+    background: #333;
+    color: white;
+    padding: 15px;
+    font-weight: bold;
+    text-align: center;
+}
+
+#catalog-items-container {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+/* Individual Furniture Buttons */
+.catalog-item {
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #f4f4f4;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.catalog-item:hover {
+    background: #e0e0e0;
+    border-color: #999;
+}
+
+/* New styling for our Orbit button in the bottom left */
+.bottom-left-panel {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    pointer-events: auto; /* Re-enable clicks */
+}
+
+.ui-btn {
+    padding: 12px 20px;
+    background: #333;
+    color: white;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.ui-btn:hover {
+    background: #555;
+}
+
+.item-name { font-weight: bold; font-size: 14px; }
+.item-category { font-size: 11px; color: #666; margin-top: 4px; }
+
+/* Add this to your styles.css */
+.floating-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 280px;
+    background: rgba(255, 255, 255, 0.95);
+    border-left: 4px solid #149650; /* Springfield Green */
+    border-radius: 4px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    padding: 15px;
+    pointer-events: auto;
+    transition: opacity 0.3s ease;
+}
+
+#hud-title {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+#hud-manufacturer {
+    margin: 0 0 10px 0;
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
+#hud-distance {
+    margin: 0;
+    font-size: 14px;
+    font-weight: bold;
+    color: #222;
+    background: #f4f4f4;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.ui-btn-danger {
+    padding: 10px;
+    background: #d9534f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.ui-btn-danger:hover {
+    background: #c9302c;
+}
+
+/* Quick animation class for when data updates */
+.pop-in {
+    transform: scale(1.02);
+    transition: transform 0.1s ease-out;
+}
+
+/* The Export Panel */
+.top-right-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    pointer-events: auto;
+    z-index: 999;
+}
+
+#generate-pdf-btn {
+    padding: 12px 24px;
+    background: #149650; /* Springfield Green */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: background 0.2s;
+}
+
+#generate-pdf-btn:hover {
+    background: #0d733c;
+}
+
+/* Make sure the HUD shifts down so it doesn't overlap the button! */
+#hud-panel {
+    top: 70px; 
+}

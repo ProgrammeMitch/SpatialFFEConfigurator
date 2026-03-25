@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Springfield VR Spatial Planner</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <!--favicon -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../css/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../css/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../css/favicon/favicon-16x16.png">
+    <link rel="manifest" href="../../css/favicon/site.webmanifest">
+    <link rel="mask-icon" href="../../css/favicon/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+    <!-- end favicon -->
+    <link rel="stylesheet" href="./styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="webgl-container"></div>
+
+    <div id="ui-layer"></div>
+
+    <div id="auth-screen" class="ui-panel">
+        <h2>Welcome to Springfield VR</h2>
+        <button id="login-btn"> Start Planning</button>
+    </div>
+
+    <div id="room-selector-screen" class="ui-panel hidden"></div>
+
+    <div id="sidebar-palette" class="sidebar hidden">
+
+        <div class="palette-header" style="background: #222;">Select Space</div>
+        <div id="room-items-container"
+            style="padding: 10px; max-height: 25vh; overflow-y: auto; border-bottom: 2px solid #ccc;">
+        </div>
+
+        <div class="palette-header">Furniture Catalog</div>
+        <div id="furniture-wrapper" style="opacity: 0.3; pointer-events: none; transition: opacity 0.3s;">
+            <div id="catalog-items-container">
+            </div>
+        </div>
+
+    </div>
+
+    <div id="orbit-controls-panel" class="bottom-left-panel">
+        <button id="orbit-toggle-btn" class="ui-btn">Enable 3D Orbit</button>
+    </div>
+
+    <div id="hud-panel" class="floating-panel hidden">
+        <h3 id="hud-title">Item Name</h3>
+        <p id="hud-manufacturer">Manufacturer</p>
+        <p id="hud-distance">Distance to Wall:
+            <span id="wall-dist-val">--</span>
+        </p>
+        <button id="hud-remove-btn" class="ui-btn-danger" style="margin-top: 10px; width: 100%;">Remove Item</button>
+    </div>
+
+    <div id="export-controls" class="top-right-panel hidden">
+        <button id="generate-pdf-btn">Finalize and Export PDF</button>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <script type="module" src="/src/main.js">
+        // The browser now knows exactly where to find 'three'!
+        //import * as THREE from 'three';
+        //import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // Quick test to prove the environment is stable
+        //const scene = new THREE.Scene();
+        //console.log("Three.js is successfully running!", scene);
+    </script>
+</body>
+
+</html>
