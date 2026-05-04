@@ -11,16 +11,16 @@ export class CatalogManager {
     async loadCatalog() {
         try {
             console.log('CatalogManager: Fetching catalog.json...');
-            
-            // In Vite, files in the /public folder are served at the root '/'
-            const response = await fetch('./catalog.json');
-            
+
+            // Uses Vite's base URL to ensure it always finds the public folder
+            const response = await fetch(`${import.meta.env.BASE_URL}catalog.json`);
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
-            
+
             // Store the parsed data
             this.environments = data.environments || [];
             this.categories = data.categories;

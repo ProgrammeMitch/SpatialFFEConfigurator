@@ -13,12 +13,19 @@ export class AssetManager {
         });
     }
 
-    async loadFurniture(itemData) {
+async loadFurniture(itemData) {
         try {
             console.log(`AssetManager: Spawning new ${itemData.name}...`);
 
-            // 1. Always load a fresh instance from the path provided in the JSON
-            const gltf = await this.loader.loadAsync(itemData.modelPath);
+            // NEW: Clean the path from catalog.json (removes './' or '/')
+            let cleanPath = itemData.modelPath.replace(/^\.\//, '');
+            if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+            
+            // NEW: Inject the Vite Base URL so it works on GitHub Pages!
+            const finalModelPath = `${import.meta.env.BASE_URL}${cleanPath}`;
+
+            // 1. Load using the newly constructed production-safe path
+            const gltf = await this.loader.loadAsync(finalModelPath);
             const model = gltf.scene;
 
             // 2. Attach the BIM Metadata directly to the 3D Object

@@ -30,10 +30,19 @@ export class EnvironmentManager {
             this.currentRoom = null; 
         }
 
-        // 3. Load the new room
+       // 3. Load the new room
         try {
             console.log(`EnvironmentManager: Loading ${roomData.name}...`);
-            const gltf = await this.loader.loadAsync(roomData.modelPath);
+            
+            // NEW: Clean the path from catalog.json (removes './' or '/')
+            let cleanPath = roomData.modelPath.replace(/^\.\//, '');
+            if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+            
+            // NEW: Inject the Vite Base URL so it works on GitHub Pages!
+            const finalModelPath = `${import.meta.env.BASE_URL}${cleanPath}`;
+
+            // Load using the newly constructed production-safe path
+            const gltf = await this.loader.loadAsync(finalModelPath);
             this.currentRoom = gltf.scene;
 
             // Tag for physics AND apply architectural styling
