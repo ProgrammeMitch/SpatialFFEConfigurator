@@ -99,6 +99,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. Broadcast that the system is online
     globalEventBus.emit('SYSTEM_READY', { status: 'Online' });
     console.log('Springfield VR Planner: Engine Running.');
+
+    // --- DESKTOP ESCAPE HATCH ---
+    // Allows desktop users trapped in VR mode to exit by hitting the Escape key.
+    window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            const xrSession = engine.renderer.xr.getSession();
+            if (xrSession) {
+                console.log('Force-quitting VR Session via Escape key...');
+                xrSession.end(); // This triggers our resetCameraToDesktop() automatically!
+            }
+        }
+    });
 });
 
 

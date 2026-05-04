@@ -47,7 +47,12 @@ export class Engine {
         this.renderer.xr.addEventListener('sessionend', () => this.activeCamera = this.desktopCamera);
 
         //Responsive Resize
-        window.addEventListener('resize', this.resize.bind(this));
+        window.addEventListener('resize', this.onWindowResize.bind(this), false);
+
+        // Listen for when the user exits VR mode
+        this.renderer.xr.addEventListener('sessionend', () => {
+            this.resetCameraToDesktop();
+        });
     }
 
     // Function to toggle the view mode
@@ -68,21 +73,69 @@ export class Engine {
         });
     }
 
-    resize() {
-        const aspect = window.innerWidth / window.innerHeight;
+    onWindowResize() {
+        // 1. Get the new screen dimensions
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const aspect = width / height;
 
-        // Update Desktop Cam
-        const d = 5;
-        this.desktopCamera.left = -d * aspect;
-        this.desktopCamera.right = d * aspect;
-        this.desktopCamera.updateProjectionMatrix();
+        // 2. Update the physical canvas renderer
+        this.renderer.setSize(width, height);
 
-        // Update VR Cam
-        this.orbitCamera.aspect = aspect;
-        this.orbitCamera.updateProjectionMatrix();
-        this.vrCamera.aspect = aspect;
-        this.vrCamera.updateProjectionMatrix();
+        // 3. Update the active camera's aspect ratio
+        if (this.activeCamera.isPerspectiveCamera) {
+            this.activeCamera.aspect = aspect;
+            this.activeCamera.updateProjectionMatrix();
+        }
+        else if (this.activeCamera.isOrthographicCamera) {
+            // For Orthographic cameras, we have to recalculate the bounding box (frustum)
+            // Assuming your initial frustum size is around 20 (adjust this number if your zoom level is different)
+            const frustumSize = 50;
 
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.activeCamera.left = -frustumSize * aspect / 2;
+            this.activeCamera.right = frustumSize * aspect / 2;
+            this.activeCamera.top = frustumSize / 2;
+            this.activeCamera.bottom = -frustumSize / 2;
+
+            this.activeCamera.updateProjectionMatrix();
+        }
+    }
+
+    resetCameraToDesktop() {
+        console.log("Engine: Forcing camera back to 2D center...");
+
+        // We use a short interval to "bully" the camera into place.
+        // This guarantees we override WebXR's delayed camera restoration.
+        let attempts = 0;
+        const forceReset = setInterval(() => {
+            attempts++;
+
+            // 1. Move camera directly above the room
+            this.activeCamera.position.set(0, 20, 0);
+
+            // 2. THE GIMBAL LOCK FIX: lookAt() breaks when looking straight down. 
+            // We must force the raw rotation values instead.
+            this.activeCamera.rotation.set(-Math.PI / 2, 0, 0);
+
+            // 3. Reset controls (checking common variable names just in case)
+            const controls = this.controls || this.orbitControls;
+            if (controls) {
+                controls.target.set(0, 0, 0);
+                controls.update();
+            }
+
+            // 4. Reset Orthographic zoom if you are using the top-down camera
+            if (this.activeCamera.isOrthographicCamera) {
+                this.activeCamera.zoom = 1;
+            }
+            this.activeCamera.updateProjectionMatrix();
+
+            // 5. Stop the loop after ~500ms and force a final window resize
+            if (attempts > 10) {
+                clearInterval(forceReset);
+                this.onWindowResize(); // Clears any residual canvas weirdness
+                console.log("Engine: Camera reset complete.");
+            }
+        }, 50);
     }
 }
