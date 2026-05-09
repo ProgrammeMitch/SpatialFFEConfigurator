@@ -40,8 +40,7 @@
     <div id="sidebar-palette" class="sidebar hidden">
 
         <div class="palette-header" style="background: #222;">Select Space</div>
-        <div id="room-items-container"
-            style="padding: 10px; max-height: 25vh; overflow-y: auto; border-bottom: 2px solid #ccc;">
+        <div id="room-items-container" style="padding: 10px; border-bottom: 2px solid #ccc;">
         </div>
 
         <div class="palette-header">Furniture Catalog</div>
@@ -68,15 +67,6 @@
     <div id="export-controls" class="top-right-panel hidden">
         <button id="generate-pdf-btn">Finalize and Export PDF</button>
     </div>
-
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-      }
-    </script>
 
     <script type="module" src="./src/main.js">
 

@@ -182,3 +182,45 @@ body {
 #hud-panel {
     top: 70px; 
 }
+
+/* --- SIDEBAR SCROLL LOGIC --- */
+
+/* 1. Select Space: Max 3 items visible (approx 75px per card * 3 = 225px) */
+#room-items-container {
+    max-height: 150px; /* Added 10px buffer for padding */
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* 2. Furniture Catalog: Max 4 items visible (approx 75px per card * 4 = 300px) */
+#catalog-items-container {
+    max-height: 310px; /* Added 10px buffer for padding */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px;
+}
+
+/* --- CUSTOM SPRINGFIELD SCROLLBARS --- */
+/* Makes the default chunky Windows/Mac scrollbars look sleek and integrated */
+
+#room-items-container::-webkit-scrollbar,
+#catalog-items-container::-webkit-scrollbar {
+    width: 6px; /* Super thin and modern */
+}
+
+#room-items-container::-webkit-scrollbar-track,
+#catalog-items-container::-webkit-scrollbar-track {
+    background: #2a2a2a; /* Matches your dark sidebar */
+    border-radius: 4px;
+}
+
+#room-items-container::-webkit-scrollbar-thumb,
+#catalog-items-container::-webkit-scrollbar-thumb {
+    background: #149650; /* Springfield Green */
+    border-radius: 4px;
+}
+
+#room-items-container::-webkit-scrollbar-thumb:hover,
+#catalog-items-container::-webkit-scrollbar-thumb:hover {
+    background: #28c973; /* Brighter green when hovered */
+}

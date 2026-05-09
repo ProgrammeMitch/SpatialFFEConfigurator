@@ -53,6 +53,24 @@ export class Engine {
         this.renderer.xr.addEventListener('sessionend', () => {
             this.resetCameraToDesktop();
         });
+
+        // Listen for when the user enters VR mode
+        this.renderer.xr.addEventListener('sessionstart', () => {
+            console.log("Engine: Entering VR. Enforcing Perspective Camera...");
+            
+            // WebXR crashes if it tries to use a flat 2D Orthographic Camera.
+            // If they entered VR from the 2D view, we force the switch to 3D.
+            if (this.activeCamera.isOrthographicCamera) {
+                // Swap the active camera to the perspective one used in Orbit Mode
+                this.activeCamera = this.perspectiveCamera;
+                this.activeCamera.updateProjectionMatrix();
+            }
+        });
+
+        // Listen for mouse wheel scrolls to zoom in 2D Edit Mode
+        this.renderer.domElement.addEventListener('wheel', this.onMouseWheel.bind(this), { passive: false });
+
+
     }
 
     // Function to toggle the view mode
@@ -98,6 +116,42 @@ export class Engine {
             this.activeCamera.bottom = -frustumSize / 2;
 
             this.activeCamera.updateProjectionMatrix();
+        }
+    }
+
+    onMouseWheel(event) {
+        if (this.activeCamera.isOrthographicCamera) {
+            event.preventDefault();
+
+            // 1. Get exact mouse screen coordinates (-1 to +1)
+            const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            const raycaster = new THREE.Raycaster();
+            const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // The Y=0 floor level
+
+            // 2. Find out what part of the room the mouse is hovering over BEFORE zooming
+            raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), this.activeCamera);
+            const targetBefore = new THREE.Vector3();
+            raycaster.ray.intersectPlane(floorPlane, targetBefore);
+
+            // 3. Calculate and apply the new zoom level
+            const zoomMultiplier = event.deltaY > 0 ? 0.9 : 1.1; 
+            let newZoom = this.activeCamera.zoom * zoomMultiplier;
+            newZoom = Math.max(0.5, Math.min(newZoom, 4.0)); // Keep our safety limits
+            this.activeCamera.zoom = newZoom;
+            this.activeCamera.updateProjectionMatrix();
+
+            // 4. Find out where that same screen pixel points AFTER zooming
+            raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), this.activeCamera);
+            const targetAfter = new THREE.Vector3();
+            raycaster.ray.intersectPlane(floorPlane, targetAfter);
+
+            // 5. Shift the camera position to perfectly bridge the gap!
+            if (targetBefore && targetAfter) {
+                this.activeCamera.position.x += (targetBefore.x - targetAfter.x);
+                this.activeCamera.position.z += (targetBefore.z - targetAfter.z);
+            }
         }
     }
 

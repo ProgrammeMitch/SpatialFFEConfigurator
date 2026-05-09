@@ -52,6 +52,14 @@ export class InteractionManager {
         canvas.addEventListener('pointerdown', this.onPointerDown.bind(this));
         canvas.addEventListener('pointermove', this.onPointerMove.bind(this));
         canvas.addEventListener('pointerup', this.onPointerUp.bind(this));
+
+        // Prevent the browser's right-click menu from popping up over the canvas
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        
+        // Track our new panning state
+        this.isPanning = false;
+        this.previousPanX = 0;
+        this.previousPanY = 0;
     }
 
     // --- NEW: PROCEDURAL UI WIDGET ---
@@ -148,6 +156,16 @@ export class InteractionManager {
     onPointerDown(event) {
         if (this.renderer.xr.isPresenting || this.isOrbitMode) return;
 
+        // --- START PANNING LOGIC ---
+        // event.button 1 is Middle Click (Scroll Wheel), 2 is Right Click
+        if (event.button === 1 || event.button === 2) {
+            this.isPanning = true;
+            this.previousPanX = event.clientX;
+            this.previousPanY = event.clientY;
+            document.body.style.cursor = 'grabbing';
+            return; // Stop here, don't try to grab furniture!
+        }
+
         this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -195,6 +213,29 @@ export class InteractionManager {
 
     onPointerMove(event) {
         if (this.renderer.xr.isPresenting || this.isOrbitMode) return;
+
+        // --- NEW: ACTIVE PANNING LOGIC ---
+        if (this.isPanning) {
+            const deltaX = event.clientX - this.previousPanX;
+            const deltaY = event.clientY - this.previousPanY;
+
+            this.previousPanX = event.clientX;
+            this.previousPanY = event.clientY;
+
+            if (this.camera.isOrthographicCamera) {
+                // Calculate exactly how many "world meters" a pixel represents at our current zoom
+                const frustumWidth = (this.camera.right - this.camera.left) / this.camera.zoom;
+                const frustumHeight = (this.camera.top - this.camera.bottom) / this.camera.zoom;
+
+                const dx = (deltaX / window.innerWidth) * frustumWidth;
+                const dz = (deltaY / window.innerHeight) * frustumHeight;
+
+                // Move the camera in the opposite direction of the mouse to drag the "world"
+                this.camera.position.x -= dx;
+                this.camera.position.z -= dz;
+            }
+            return; 
+        }
 
         // SPIN MODE LOGIC
         if (this.isSpinDragging) {
@@ -248,6 +289,13 @@ export class InteractionManager {
     }
 
     onPointerUp() {
+
+        if (this.isPanning) {
+            this.isPanning = false;
+            document.body.style.cursor = 'default';
+            return;
+        }
+
         // Handle dropping from Spin Mode
         if (this.isSpinDragging) {
             this.isSpinDragging = false;

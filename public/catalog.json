@@ -1,16 +1,16 @@
 {
     "environments": [
-    {
-      "id": "env_class_01",
-      "name": "Standard Classroom",
-      "modelPath": "./assets/environments/classroom.glb"
-    },
         {
-      "id": "env_class_02",
-      "name": "Standard Classroom",
-      "modelPath": "./assets/environments/classroom.glb"
-    }
-  ],
+            "id": "env_class_01",
+            "name": "Standard Classroom",
+            "modelPath": "./assets/environments/classroom.glb"
+        },
+        {
+            "id": "env_class_02",
+            "name": "Standard Classroom",
+            "modelPath": "./assets/environments/classroom.glb"
+        }
+    ],
     "categories": [
         "Chairs",
         "Desks",
