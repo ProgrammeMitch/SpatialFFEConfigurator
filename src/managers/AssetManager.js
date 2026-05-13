@@ -13,14 +13,14 @@ export class AssetManager {
         });
     }
 
-async loadFurniture(itemData) {
+    async loadFurniture(itemData, presetTransform = null) {
         try {
             console.log(`AssetManager: Spawning new ${itemData.name}...`);
 
             // NEW: Clean the path from catalog.json (removes './' or '/')
             let cleanPath = itemData.modelPath.replace(/^\.\//, '');
             if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
-            
+
             // NEW: Inject the Vite Base URL so it works on GitHub Pages!
             const finalModelPath = `${import.meta.env.BASE_URL}${cleanPath}`;
 
@@ -38,10 +38,15 @@ async loadFurniture(itemData) {
             // 3. Set a unique name based on the UUID to avoid naming collisions
             model.name = `${itemData.id}_${THREE.MathUtils.generateUUID().substring(0, 8)}`;
 
-            // 4. Initial Placement
-            // We place it at (0, 0, 0) by default; the user will then drag it
-            model.position.set(0, 0, 0);
-            
+            if (presetTransform) {
+                // If the system provided a blueprint, place it exactly where it goes!
+                model.position.copy(presetTransform.position);
+                model.rotation.y = presetTransform.rotationY;
+            } else {
+                // If the user clicked it from the sidebar, drop it at the center
+                model.position.set(0, 0, 0);
+            }
+
             this.scene.add(model);
 
             // 5. Broadcast that a NEW item has entered the scene

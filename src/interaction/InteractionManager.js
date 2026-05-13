@@ -34,9 +34,12 @@ export class InteractionManager {
         this.selectionBox.visible = false;
         this.scene.add(this.selectionBox);
 
-        // NEW: The Visual Rotation Handle
+        // The Visual Rotation Handle
         this.rotationWidget = this.createRotationWidget();
         this.scene.add(this.rotationWidget);
+
+        // Initialize the VR Info Panel
+        this.vrInfoPanel = this.createVRInfoPanel();
 
         globalEventBus.on('ORBIT_TOGGLED', (isActive) => {
             this.isOrbitMode = isActive;
@@ -55,7 +58,7 @@ export class InteractionManager {
 
         // Prevent the browser's right-click menu from popping up over the canvas
         canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-        
+
         // Track our new panning state
         this.isPanning = false;
         this.previousPanX = 0;
@@ -105,20 +108,104 @@ export class InteractionManager {
         return group;
     }
 
-    updateWidgetPosition() {
+    // --- NEW: VR FLOATING HUD ---
+    createVRInfoPanel() {
+        // 1. Create an invisible 2D Canvas in memory
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 256;
+        this.vrCanvasContext = canvas.getContext('2d');
+
+        // 2. Convert it into a Three.js Texture
+        this.vrTexture = new THREE.CanvasTexture(canvas);
+        this.vrTexture.minFilter = THREE.LinearFilter;
+
+        // 3. Paste it onto a 3D Plane (80cm wide, 40cm tall)
+        const mat = new THREE.MeshBasicMaterial({
+            map: this.vrTexture,
+            transparent: true,
+            side: THREE.DoubleSide,
+            depthTest: false // Ensures it renders cleanly over other objects
+        });
+
+        const geo = new THREE.PlaneGeometry(0.8, 0.4);
+        const mesh = new THREE.Mesh(geo, mat);
+
+        mesh.visible = false;
+        mesh.renderOrder = 999; // Force it to draw on top
+        this.scene.add(mesh);
+
+        return mesh;
+    }
+
+    updateVRInfoPanel(bimData, clearance) {
+        const ctx = this.vrCanvasContext;
+
+        // Clear the old drawing
+        ctx.clearRect(0, 0, 512, 256);
+
+        // Draw Dark Background with rounded corners
+        ctx.fillStyle = 'rgba(34, 34, 34, 0.9)';
+        ctx.beginPath();
+        ctx.roundRect(0, 0, 512, 256, 16);
+        ctx.fill();
+
+        // Draw Springfield Green Border
+        ctx.strokeStyle = '#149650';
+        ctx.lineWidth = 10;
+        ctx.strokeRect(0, 0, 512, 256);
+
+        // Draw Text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 36px sans-serif';
+        ctx.fillText(bimData.name || 'Selected Item', 30, 60);
+
+        ctx.fillStyle = '#aaaaaa';
+        ctx.font = '28px sans-serif';
+        ctx.fillText(`Mfg: ${bimData.manufacturer || 'Springfield'}`, 30, 110);
+        ctx.fillText(`Cat: ${bimData.category || 'N/A'}`, 30, 150);
+
+        // Draw Clearance Distance (BULLETPROOF PARSING)
+        ctx.fillStyle = '#ffb300'; // High-visibility Amber
+        const validClearance = parseFloat(clearance);
+        const distText = !isNaN(validClearance) ? validClearance.toFixed(2) + 'm' : '--';
+        ctx.fillText(`Clearance: ${distText}`, 30, 210);
+
+        // Crucial: Tell the GPU to update the image!
+        this.vrTexture.needsUpdate = true;
+    }
+
+updateWidgetPosition() {
         if (!this.activeObject) return;
 
         const box = new THREE.Box3().setFromObject(this.activeObject);
         const center = new THREE.Vector3();
         box.getCenter(center);
 
-        // Sit the widget right at the floor level of the active object
-        this.rotationWidget.position.set(center.x, box.min.y + 0.02, center.z);
+        // 1. Determine the TRUE world position of the active camera
+        const cameraWorldPos = new THREE.Vector3();
+        
+        // FIX: If we are in VR, we must explicitly ask the WebXR renderer where the headset is!
+        if (this.renderer.xr.isPresenting) {
+            this.renderer.xr.getCamera().getWorldPosition(cameraWorldPos);
+        } else {
+            this.camera.getWorldPosition(cameraWorldPos);
+        }
 
-        // Orient the arc to face the camera so the user can always see it
-        const camPos = this.camera.position.clone();
-        camPos.y = this.rotationWidget.position.y;
-        this.rotationWidget.lookAt(camPos);
+        // --- UPDATE THE ROTATION WIDGET ---
+        this.rotationWidget.position.set(center.x, box.min.y + 0.02, center.z);
+        
+        const widgetTargetPos = cameraWorldPos.clone();
+        widgetTargetPos.y = this.rotationWidget.position.y; 
+        this.rotationWidget.lookAt(widgetTargetPos);
+
+        // --- UPDATE THE VR INFO PANEL ---
+        if (this.vrInfoPanel && this.vrInfoPanel.visible) {
+            this.vrInfoPanel.position.set(center.x, box.max.y + 0.4, center.z);
+            
+            // Make the HUD look directly at the user's actual VR headset
+            this.vrInfoPanel.lookAt(cameraWorldPos);
+        }
     }
 
     getFurnitureItems() {
@@ -234,7 +321,7 @@ export class InteractionManager {
                 this.camera.position.x -= dx;
                 this.camera.position.z -= dz;
             }
-            return; 
+            return;
         }
 
         // SPIN MODE LOGIC
@@ -246,7 +333,7 @@ export class InteractionManager {
             this.selectionBox.update();
             this.updateWidgetPosition();
 
-            const isColliding = this.checkWallCollision(this.activeObject);
+            const isColliding = this.checkAllCollisions(this.activeObject);
             this.selectionBox.material.color.setHex(isColliding ? 0xff0000 : 0x149650);
 
             // FIX: Give the arrow an ultra-bright yellow glow while actively dragging
@@ -283,7 +370,7 @@ export class InteractionManager {
             this.selectionBox.update();
             this.updateWidgetPosition();
 
-            const isColliding = this.checkWallCollision(this.draggedObject);
+            const isColliding = this.checkAllCollisions(this.draggedObject);
             this.selectionBox.material.color.setHex(isColliding ? 0xff0000 : 0x149650);
         }
     }
@@ -299,7 +386,7 @@ export class InteractionManager {
         // Handle dropping from Spin Mode
         if (this.isSpinDragging) {
             this.isSpinDragging = false;
-            const isColliding = this.checkWallCollision(this.activeObject);
+            const isColliding = this.checkAllCollisions(this.activeObject);
 
             if (isColliding) {
                 this.activeObject.rotation.y = this.lastSafeRotation;
@@ -323,7 +410,7 @@ export class InteractionManager {
         // Handle dropping from Move Mode
         if (this.draggedObject) {
             if (this.isActuallyDragging) {
-                const isColliding = this.checkWallCollision(this.draggedObject);
+                const isColliding = this.checkAllCollisions(this.draggedObject);
 
                 if (isColliding) {
                     this.draggedObject.position.copy(this.lastSafePosition);
@@ -362,12 +449,24 @@ export class InteractionManager {
             this.selectionBox.setFromObject(object);
             this.selectionBox.material.color.setHex(0x149650);
             this.selectionBox.visible = true;
-
             this.rotationWidget.visible = true;
+
+            // Render the VR HUD if we are inside the headset
+            if (this.renderer.xr.isPresenting) {
+                const clearance = MathUtils.getDistanceToNearestWall(object, this.scene);
+                this.updateVRInfoPanel(object.userData, clearance);
+                this.vrInfoPanel.visible = true;
+            } else {
+                this.vrInfoPanel.visible = false;
+            }
+
             this.updateWidgetPosition();
         } else {
             this.selectionBox.visible = false;
             this.rotationWidget.visible = false;
+
+            // NEW: Hide the VR HUD when deselected
+            if (this.vrInfoPanel) this.vrInfoPanel.visible = false;
         }
     }
 
@@ -447,7 +546,7 @@ export class InteractionManager {
 
                 this.selectionBox.update();
                 this.updateWidgetPosition();
-                const isColliding = this.checkWallCollision(this.activeObject);
+                const isColliding = this.checkAllCollisions(this.activeObject);
                 this.selectionBox.material.color.setHex(isColliding ? 0xff0000 : 0x149650);
                 return;
             }
@@ -470,7 +569,7 @@ export class InteractionManager {
 
                 this.selectionBox.update();
                 this.updateWidgetPosition();
-                const isColliding = this.checkWallCollision(this.draggedObject);
+                const isColliding = this.checkAllCollisions(this.draggedObject);
                 this.selectionBox.material.color.setHex(isColliding ? 0xff0000 : 0x149650);
             }
         }
@@ -479,7 +578,7 @@ export class InteractionManager {
     onVRSelectEnd() {
         if (this.isVRSpinDragging) {
             this.isVRSpinDragging = false;
-            const isColliding = this.checkWallCollision(this.activeObject);
+            const isColliding = this.checkAllCollisions(this.activeObject);
 
             if (isColliding) {
                 this.activeObject.rotation.y = this.lastSafeRotation;
@@ -491,7 +590,7 @@ export class InteractionManager {
         }
         else if (this.draggedObject) {
             if (this.isActuallyDragging) {
-                const isColliding = this.checkWallCollision(this.draggedObject);
+                const isColliding = this.checkAllCollisions(this.draggedObject);
 
                 if (isColliding) {
                     this.draggedObject.position.copy(this.lastSafePosition);
@@ -509,6 +608,37 @@ export class InteractionManager {
 
         this.draggedObject = null;
         this.activeController = null;
+    }
+
+    // --- MASTER COLLISION CHECKER ---
+    checkAllCollisions(object) {
+        // 1. Check Walls and Void (using your existing raycaster logic)
+        if (this.checkWallCollision(object)) return true;
+
+        // 2. Check Furniture Overlaps using Bounding Boxes
+        const objectBox = new THREE.Box3().setFromObject(object);
+
+        // PRO-TIP: Shrink the bounding box by a tiny margin (e.g., 2cm)
+        // This allows items to be pushed snugly side-by-side without triggering a false red alert
+        objectBox.expandByScalar(-0.02);
+
+        const allFurniture = this.getFurnitureItems();
+
+        for (let otherItem of allFurniture) {
+            // Don't test the object against itself
+            if (otherItem === object) continue;
+
+            const otherBox = new THREE.Box3().setFromObject(otherItem);
+            otherBox.expandByScalar(-0.02); // Shrink the target box too
+
+            // If the boxes overlap, we have a collision!
+            if (objectBox.intersectsBox(otherBox)) {
+                return true;
+            }
+        }
+
+        // If it survived the walls and the furniture, it is a valid placement!
+        return false;
     }
 
     // --- UNIVERSAL COLLISION MATH ---

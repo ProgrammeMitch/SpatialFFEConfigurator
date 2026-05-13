@@ -3,31 +3,27 @@ import { VRButton } from '../../libs/VRButton.js';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 
 export class WebXRManager {
-    constructor(renderer, scene, interactionManager) {
+    // NEW: Accept vrRig as the 4th argument
+    constructor(renderer, scene, interactionManager, vrRig) {
         this.renderer = renderer;
         this.scene = scene;
         this.interactionManager = interactionManager;
+        this.vrRig = vrRig; // Store the rig so we can attach controllers to it
 
-        // 1. Properly initialize the custom VRButton
-        // We pass options that the VRButton.js constructor expects
         const vrOptions = {
             sessionInit: { 
                 optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking'] 
             },
             onSessionStart: () => {
                 console.log("WebXRManager: VR Session Started");
-                // The Engine handles camera swapping via renderer.xr listeners,
-                // but we can trigger additional VR-only UI logic here if needed.
             },
             onSessionEnd: () => {
                 console.log("WebXRManager: VR Session Ended");
             }
         };
 
-        // Instantiate the button (it handles its own DOM attachment in your script)
         this.vrButton = new VRButton(this.renderer, vrOptions);
 
-        // 2. Setup Controllers
         this.setupControllers();
     }
 
@@ -35,17 +31,17 @@ export class WebXRManager {
         this.controller1 = this.renderer.xr.getController(0);
         this.controller2 = this.renderer.xr.getController(1);
 
-        // Map the trigger (select) events to the InteractionManager
         this.controller1.addEventListener('selectstart', () => this.interactionManager.onVRSelectStart(this.controller1));
         this.controller1.addEventListener('selectend', () => this.interactionManager.onVRSelectEnd());
         
         this.controller2.addEventListener('selectstart', () => this.interactionManager.onVRSelectStart(this.controller2));
         this.controller2.addEventListener('selectend', () => this.interactionManager.onVRSelectEnd());
 
-        this.scene.add(this.controller1);
-        this.scene.add(this.controller2);
+        // FIX: Attach the controllers to the VR Rig, not the floor!
+        this.vrRig.add(this.controller1);
+        this.vrRig.add(this.controller2);
 
-        // 3. Add Visual Laser Pointers for guidance
+        // Visual Laser Pointers
         const laserGeo = new THREE.BufferGeometry().setFromPoints([
             new THREE.Vector3(0, 0, 0), 
             new THREE.Vector3(0, 0, -5)
@@ -56,15 +52,17 @@ export class WebXRManager {
         this.controller1.add(line.clone());
         this.controller2.add(line.clone());
 
-        // 4. Add 3D Controller Models
+        // 3D Controller Models
         const factory = new XRControllerModelFactory();
         
         this.grip1 = this.renderer.xr.getControllerGrip(0);
         this.grip1.add(factory.createControllerModel(this.grip1));
-        this.scene.add(this.grip1);
+        // FIX: Attach the 3D models to the VR Rig!
+        this.vrRig.add(this.grip1);
 
         this.grip2 = this.renderer.xr.getControllerGrip(1);
         this.grip2.add(factory.createControllerModel(this.grip2));
-        this.scene.add(this.grip2);
+        // FIX: Attach the 3D models to the VR Rig!
+        this.vrRig.add(this.grip2);
     }
 }

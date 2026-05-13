@@ -9,18 +9,26 @@ export class Engine {
 
         // 1. Create the Desktop "Floor Plan" Camera (Orthographic)
         const aspect = window.innerWidth / window.innerHeight;
-        const d = 25; // The "zoom" level for the floor plan
+        const d = 25;
         this.desktopCamera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 0.1, 100);
-        this.desktopCamera.position.set(0, 10, 0); // High above the room
+        this.desktopCamera.position.set(0, 10, 0);
         this.desktopCamera.lookAt(0, 0, 0);
 
         // 2. Create the VR "Immersive" Camera (Perspective)
         this.vrCamera = new THREE.PerspectiveCamera(75, aspect, 0.1, 100);
-        this.vrCamera.position.set(0, 1.6, 3);
+        // We set this to 0,0,0 because the Rig will carry it!
+        this.vrCamera.position.set(0, 0, 0);
+
+        // --- NEW: THE VR RIG ---
+        this.vrRig = new THREE.Group();
+        this.vrRig.position.y = 1.1; // Lift the rig 1.1m into the air
+        this.vrRig.add(this.vrCamera); // ONLY the vrCamera goes inside
+        this.scene.add(this.vrRig);
 
         // 3. Orbit Camera (Perspective - Angled)
         this.orbitCamera = new THREE.PerspectiveCamera(50, aspect, 0.1, 100);
-        this.orbitCamera.position.set(5, 5, 5); // Start at a nice 3/4 angle
+        this.orbitCamera.position.set(5, 5, 5);
+        this.orbitCamera.lookAt(0, 0, 0);
 
         // Default to Desktop
         this.activeCamera = this.desktopCamera;
@@ -57,12 +65,10 @@ export class Engine {
         // Listen for when the user enters VR mode
         this.renderer.xr.addEventListener('sessionstart', () => {
             console.log("Engine: Entering VR. Enforcing Perspective Camera...");
-            
-            // WebXR crashes if it tries to use a flat 2D Orthographic Camera.
-            // If they entered VR from the 2D view, we force the switch to 3D.
+
             if (this.activeCamera.isOrthographicCamera) {
-                // Swap the active camera to the perspective one used in Orbit Mode
-                this.activeCamera = this.perspectiveCamera;
+                // FIX: Changed from this.perspectiveCamera to this.vrCamera
+                this.activeCamera = this.vrCamera;
                 this.activeCamera.updateProjectionMatrix();
             }
         });
@@ -136,7 +142,7 @@ export class Engine {
             raycaster.ray.intersectPlane(floorPlane, targetBefore);
 
             // 3. Calculate and apply the new zoom level
-            const zoomMultiplier = event.deltaY > 0 ? 0.9 : 1.1; 
+            const zoomMultiplier = event.deltaY > 0 ? 0.9 : 1.1;
             let newZoom = this.activeCamera.zoom * zoomMultiplier;
             newZoom = Math.max(0.5, Math.min(newZoom, 4.0)); // Keep our safety limits
             this.activeCamera.zoom = newZoom;

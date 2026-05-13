@@ -18,7 +18,7 @@
     ],
     "furniture": [
         {
-            "id": "ergo_01",
+            "id": "ergo_02",
             "name": "Ergo-Scholar Chair",
             "category": "Chairs",
             "modelPath": "./assets/furnitures/chair.glb",

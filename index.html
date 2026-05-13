@@ -55,18 +55,26 @@
         <button id="orbit-toggle-btn" class="ui-btn">Enable 3D Orbit</button>
     </div>
 
-    <div id="hud-panel" class="floating-panel hidden">
-        <h3 id="hud-title">Item Name</h3>
-        <p id="hud-manufacturer">Manufacturer</p>
-        <p id="hud-distance">Distance to Wall:
-            <span id="wall-dist-val">--</span>
-        </p>
-        <button id="hud-remove-btn" class="ui-btn-danger" style="margin-top: 10px; width: 100%;">Remove Item</button>
-    </div>
+
 
     <div id="export-controls" class="top-right-panel hidden">
-        <button id="generate-pdf-btn">Finalize and Export PDF</button>
+        <button id="save-session-btn" class="ui-btn"
+            style="margin-bottom: 10px; background: #ffb300; color: #222; width: 80%;">Save Session</button>
+
+        <button id="generate-pdf-btn" style="margin-bottom: 10px;  width: 80%;">Finalize and Export PDF</button>
+
+        <div id="hud-panel" class="floating-panel hidden" style="margin-top: 30px; left: 0%; width: 70%;">
+            <h3 id="hud-title">Item Name</h3>
+            <p id="hud-manufacturer">Manufacturer</p>
+            <p id="hud-distance">Distance to Wall:
+                <span id="wall-dist-val">--</span>
+            </p>
+            <button id="hud-remove-btn" class="ui-btn-danger" style="margin-top: 10px; width: 100%;">Remove
+                Item</button>
+        </div>
     </div>
+
+
 
     <script type="module" src="./src/main.js">
 

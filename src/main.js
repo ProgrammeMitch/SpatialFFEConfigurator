@@ -42,9 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
         engine.renderer
     );
 
-    const xrManager = new WebXRManager(engine.renderer, engine.scene, interactionManager);
+    const xrManager = new WebXRManager(engine.renderer, engine.scene, interactionManager, engine.vrRig);
     const pdfGenerator = new PDFGenerator(engine, stateManager);
-    
+
     const orbitBtn = document.getElementById('orbit-toggle-btn');
     let isOrbiting = false;
 
@@ -76,9 +76,152 @@ document.addEventListener('DOMContentLoaded', () => {
     engine.scene.add(light);
     engine.scene.add(new THREE.HemisphereLight(0x808080, 0x606060));
 
-    // Listen for the catalog to finish loading just to prove it works
-    globalEventBus.on('CATALOG_READY', (data) => {
-        console.log('Main: The catalog is ready! Here is the first item:', data.items[0]);
+    // --- THE CLOUD SAVE & RESUME ENGINE ---
+
+    let currentEnvironmentId = null;
+    globalEventBus.on('ROOM_SELECTED', (roomData) => {
+        currentEnvironmentId = roomData.id;
+    });
+
+    // 1. The Cloud Save Sequence
+    const saveBtn = document.getElementById('save-session-btn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            console.log("Main: Uploading session state to the cloud...");
+
+            // Optional: Change button text so the user knows it's working
+            const originalText = saveBtn.innerText;
+            saveBtn.innerText = "Saving to Cloud...";
+            saveBtn.disabled = true;
+
+            const furnitureItems = interactionManager.getFurnitureItems();
+
+            const layoutData = {
+                environmentId: currentEnvironmentId,
+                furniture: furnitureItems.map(item => ({
+                    id: item.userData.id,
+                    position: { x: item.position.x, y: item.position.y, z: item.position.z },
+                    rotationY: item.rotation.y
+                }))
+            };
+
+            // Bulletproof Key Scrubber
+            const rawKey = import.meta.env.VITE_JSONBIN_KEY || "";
+            const cleanKey = rawKey.replace(/['"]/g, '').trim();
+
+            // --- THE SMART SAVE LOGIC (POST vs PUT) ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const existingSessionId = urlParams.get('session');
+
+            // Default to POST (Create a brand new bin)
+            let endpoint = 'https://api.jsonbin.io/v3/b';
+            let requestMethod = 'POST';
+
+            // If we are already inside a session, switch to PUT (Overwrite the existing bin)
+            if (existingSessionId) {
+                endpoint = `https://api.jsonbin.io/v3/b/${existingSessionId}`;
+                requestMethod = 'PUT';
+            }
+
+            try {
+                // Send the blueprint to JSONBin
+                const response = await fetch(endpoint, {
+                    method: requestMethod,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': cleanKey,
+                        'X-Bin-Private': 'false'
+                    },
+                    body: JSON.stringify(layoutData)
+                });
+
+                const result = await response.json();
+
+                // Safety Check
+                if (!response.ok) {
+                    throw new Error(`JSONBin Error: ${result.message || 'Unauthorized or bad request'}`);
+                }
+
+                // If it was a brand new POST, grab the new ID and update the URL
+                if (requestMethod === 'POST') {
+                    const newSessionId = result.metadata.id;
+                    const newUrl = `${window.location.pathname}?session=${newSessionId}`;
+                    window.history.pushState({ path: newUrl }, '', newUrl);
+
+                    alert(`New Session Created!\n\nLink: ${window.location.href}\n\nYou can now share this URL. Future saves will update this exact link.`);
+                } else {
+                    // It was a PUT request, so the URL is already correct!
+                    alert(`Session Updated Successfully!\n\nAnyone who refreshes this link will now see your latest changes.`);
+                }
+
+            } catch (error) {
+                console.error("Cloud Save Failed:", error);
+                alert(`Failed to save session to the cloud.\nReason: ${error.message}`);
+            } finally {
+                // Reset the button
+                saveBtn.innerText = originalText;
+                saveBtn.disabled = false;
+            }
+        });
+    }
+
+    // 2. The Cloud Boot Sequence
+    globalEventBus.on('CATALOG_READY', async (data) => {
+        console.log('Main: Catalog ready! Checking URL for cloud sessions...');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session');
+        let clientPresetBlueprint = null;
+
+        if (sessionId) {
+            console.log(`Main: Found Session ID ${sessionId}. Fetching from cloud...`);
+            try {
+                // Fetch the specific blueprint from JSONBin
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${sessionId}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Master-Key': import.meta.env.VITE_JSONBIN_KEY
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    clientPresetBlueprint = result.record; // JSONBin wraps your data inside a 'record' object
+                    console.log(`Main: Successfully downloaded blueprint from cloud.`);
+                } else {
+                    console.warn(`Main: Cloud session ${sessionId} not found or expired.`);
+                }
+            } catch (error) {
+                console.error("Cloud Load Failed:", error);
+            }
+        }
+
+        if (!clientPresetBlueprint) return;
+
+        // --- RESTORE THE SAVED SESSION ---
+        const targetRoom = data.environments.find(env => env.id === clientPresetBlueprint.environmentId);
+        if (targetRoom) {
+            globalEventBus.emit('ROOM_SELECTED', targetRoom);
+        }
+
+        let hasLoadedPreset = false;
+
+        globalEventBus.on('ENVIRONMENT_READY', () => {
+            if (hasLoadedPreset) return;
+            hasLoadedPreset = true;
+
+            console.log('Main: Room loaded. Restoring cloud layout...');
+
+            clientPresetBlueprint.furniture.forEach(itemData => {
+                const catalogItem = data.items.find(item => item.id === itemData.id);
+                if (catalogItem) {
+                    assetManager.loadFurniture(catalogItem, {
+                        position: new THREE.Vector3(itemData.position.x, itemData.position.y, itemData.position.z),
+                        rotationY: itemData.rotationY
+                    });
+                }
+            });
+        });
     });
 
     // We pass engine.scene to managers that need to physically add things to the 3D world
