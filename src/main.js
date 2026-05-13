@@ -148,10 +148,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     const newUrl = `${window.location.pathname}?session=${newSessionId}`;
                     window.history.pushState({ path: newUrl }, '', newUrl);
 
-                    alert(`New Session Created!\n\nLink: ${window.location.href}\n\nYou can now share this URL. Future saves will update this exact link.`);
+                    alert(`New Session Created!\n\nLink: ${window.location.href}\n\nYou can now share this URL.`);
                 } else {
                     // It was a PUT request, so the URL is already correct!
-                    alert(`Session Updated Successfully!\n\nAnyone who refreshes this link will now see your latest changes.`);
+                    alert(`Session Updated Successfully!`);
                 }
 
             } catch (error) {
