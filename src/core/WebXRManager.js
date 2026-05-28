@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { VRButton } from '../../libs/VRButton.js'; 
+import { VRButton } from '../../libs/VRButton.js';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 
 export class WebXRManager {
@@ -11,8 +11,8 @@ export class WebXRManager {
         this.vrRig = vrRig; // Store the rig so we can attach controllers to it
 
         const vrOptions = {
-            sessionInit: { 
-                optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking'] 
+            sessionInit: {
+                optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking']
             },
             onSessionStart: () => {
                 console.log("WebXRManager: VR Session Started");
@@ -33,9 +33,22 @@ export class WebXRManager {
 
         this.controller1.addEventListener('selectstart', () => this.interactionManager.onVRSelectStart(this.controller1));
         this.controller1.addEventListener('selectend', () => this.interactionManager.onVRSelectEnd());
-        
+
         this.controller2.addEventListener('selectstart', () => this.interactionManager.onVRSelectStart(this.controller2));
         this.controller2.addEventListener('selectend', () => this.interactionManager.onVRSelectEnd());
+
+        // --- The Grip Button (Hardware VR Eject) ---
+        const ejectVR = () => {
+            const xrSession = this.renderer.xr.getSession();
+            if (xrSession) {
+                console.log('WebXRManager: Hardware Grip Eject triggered. Exiting VR...');
+                xrSession.end(); // This automatically triggers your Engine's resetCameraToDesktop!
+            }
+        };
+
+        // Attach the eject listener to the grip button on BOTH hands
+        this.controller1.addEventListener('squeezestart', ejectVR);
+        this.controller2.addEventListener('squeezestart', ejectVR);
 
         // FIX: Attach the controllers to the VR Rig, not the floor!
         this.vrRig.add(this.controller1);
@@ -43,18 +56,18 @@ export class WebXRManager {
 
         // Visual Laser Pointers
         const laserGeo = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(0, 0, 0), 
+            new THREE.Vector3(0, 0, 0),
             new THREE.Vector3(0, 0, -5)
         ]);
         const laserMat = new THREE.LineBasicMaterial({ color: 0xffffff });
         const line = new THREE.Line(laserGeo, laserMat);
-        
+
         this.controller1.add(line.clone());
         this.controller2.add(line.clone());
 
         // 3D Controller Models
         const factory = new XRControllerModelFactory();
-        
+
         this.grip1 = this.renderer.xr.getControllerGrip(0);
         this.grip1.add(factory.createControllerModel(this.grip1));
         // FIX: Attach the 3D models to the VR Rig!

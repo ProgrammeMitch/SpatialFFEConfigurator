@@ -64,8 +64,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Let's add a basic light so we can actually see the model when it loads
-    const light = new THREE.DirectionalLight(0xffffff, 3);
+// --- THE VIRTUAL STUDIO LIGHTING RIG ---
+
+    // 1. The "Sun" (Directional Light)
+    // Increased intensity from 3 to 4.5 for a brighter primary beam
+    const light = new THREE.DirectionalLight(0xffffff, 4.5);
     light.position.set(5, 10, 5);
     light.castShadow = true;
     light.shadow.camera.top = 2;
@@ -74,7 +77,16 @@ document.addEventListener('DOMContentLoaded', () => {
     light.shadow.camera.left = - 2;
     light.shadow.mapSize.set(4096, 4096);
     engine.scene.add(light);
-    engine.scene.add(new THREE.HemisphereLight(0x808080, 0x606060));
+
+    // 2. The "Sky Bounce" (Hemisphere Light)
+    // Pushed the colors closer to white (0xffffff) to lift the shadows everywhere
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x888888, 1.2);
+    engine.scene.add(hemiLight);
+
+    // 3. NEW: The "Fill Light" (Ambient Light)
+    // This explicitly prevents pure-black shadows on the underside of furniture
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    engine.scene.add(ambientLight);
 
     // --- THE CLOUD SAVE & RESUME ENGINE ---
 

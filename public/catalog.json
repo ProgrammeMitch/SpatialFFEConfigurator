@@ -2,13 +2,13 @@
     "environments": [
         {
             "id": "env_class_01",
-            "name": "Standard Classroom",
+            "name": "Exotic Classroom",
             "modelPath": "./assets/environments/classroom.glb"
         },
         {
             "id": "env_class_02",
             "name": "Standard Classroom",
-            "modelPath": "./assets/environments/classroom.glb"
+            "modelPath": "./assets/environments/simple-classroom.glb"
         }
     ],
     "categories": [
@@ -39,6 +39,57 @@
             "name": "Scholar Chair",
             "category": "Chairs",
             "modelPath": "./assets/furnitures/office-chair.glb",
+            "manufacturer": "Springfield Educational Furniture",
+            "dimensions": {
+                "width": 0.5,
+                "height": 0.8,
+                "depth": 0.5
+            },
+            "physics": {
+                "mass": 5,
+                "snapToFloor": true,
+                "collisionRadius": 0.3
+            }
+        },
+        {
+            "id": "ergo_03",
+            "name": "Boss Chair",
+            "category": "Chairs",
+            "modelPath": "./assets/furnitures/arm-chair.glb",
+            "manufacturer": "Springfield Educational Furniture",
+            "dimensions": {
+                "width": 0.5,
+                "height": 0.8,
+                "depth": 0.5
+            },
+            "physics": {
+                "mass": 5,
+                "snapToFloor": true,
+                "collisionRadius": 0.3
+            }
+        },
+        {
+            "id": "table_01",
+            "name": "Flat Top Table",
+            "category": "Desks",
+            "modelPath": "./assets/furnitures/flat-top-table.glb",
+            "manufacturer": "Springfield Educational Furniture",
+            "dimensions": {
+                "width": 0.5,
+                "height": 0.8,
+                "depth": 0.5
+            },
+            "physics": {
+                "mass": 5,
+                "snapToFloor": true,
+                "collisionRadius": 0.3
+            }
+        },
+        {
+            "id": "table_02",
+            "name": "Round Top Table",
+            "category": "Desks",
+            "modelPath": "./assets/furnitures/round-top-table.glb",
             "manufacturer": "Springfield Educational Furniture",
             "dimensions": {
                 "width": 0.5,
