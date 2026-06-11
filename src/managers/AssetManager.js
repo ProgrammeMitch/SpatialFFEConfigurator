@@ -1,11 +1,18 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'; // NEW: Import the Draco decoder
 import { globalEventBus } from '../core/EventBus.js';
 
 export class AssetManager {
     constructor(scene) {
         this.scene = scene;
         this.loader = new GLTFLoader();
+
+        // NEW: Initialize the Draco Decoder to handle the hyper-compressed cloud geometry
+        const dracoLoader = new DRACOLoader();
+        // We use unpkg CDN so you don't have to download/host the WASM decoder files locally
+        dracoLoader.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/');
+        this.loader.setDRACOLoader(dracoLoader);
 
         // Listen for new furniture selections from the sidebar
         globalEventBus.on('ITEM_SELECTED', (itemData) => {
@@ -17,14 +24,17 @@ export class AssetManager {
         try {
             console.log(`AssetManager: Spawning new ${itemData.name}...`);
 
-            // NEW: Clean the path from catalog.json (removes './' or '/')
-            let cleanPath = itemData.modelPath.replace(/^\.\//, '');
-            if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+            let finalModelPath = itemData.modelPath;
 
-            // NEW: Inject the Vite Base URL so it works on GitHub Pages!
-            const finalModelPath = `${import.meta.env.BASE_URL}${cleanPath}`;
+            // NEW: The Cloud Routing Check
+            // If the path does NOT start with 'http', we assume it's a local Vite asset
+            if (!finalModelPath.startsWith('http')) {
+                let cleanPath = finalModelPath.replace(/^\.\//, '');
+                if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+                finalModelPath = `${import.meta.env.BASE_URL}${cleanPath}`;
+            }
 
-            // 1. Load using the newly constructed production-safe path
+            // 1. Load using the dynamically routed path (Cloud or Local)
             const gltf = await this.loader.loadAsync(finalModelPath);
             const model = gltf.scene;
 
