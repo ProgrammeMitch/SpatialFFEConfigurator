@@ -8,6 +8,13 @@ export class HUD {
         this.manufacturer = document.getElementById('hud-manufacturer');
         this.distanceVal = document.getElementById('wall-dist-val'); // We'll use this for coordinates for now
         this.removeBtn = document.getElementById('hud-remove-btn');
+        this.cost = document.getElementById('hud-cost');
+        this.warranty = document.getElementById('hud-warranty');
+        this.installationTime = document.getElementById('hud-installation-time');
+        this.fireSafetyRating = document.getElementById('hud-fire-safety-rating');
+        this.lifeCycle = document.getElementById('hud-lifecycle');
+        this.material = document.getElementById('hud-material');
+        this.dimensions = document.getElementById('hud-dimensions');
 
         this.currentObjectId = null;
 
@@ -43,7 +50,7 @@ export class HUD {
     }
 
     updateDisplay(data) {
-        const { object, bimData, clearance } = data;
+        const { object, bimData } = data;
 
         // Save the unique Three.js UUID so we know exactly which chair this is
         this.currentObjectId = object.uuid;
@@ -51,13 +58,14 @@ export class HUD {
         // Inject the BIM metadata
         this.title.textContent = bimData.name;
         this.manufacturer.textContent = `Provider: ${bimData.manufacturer}`;
+        this.cost.textContent = `Cost: ${bimData.cost}`;
+        this.warranty.textContent = `Warranty: ${bimData.warranty}`;
+        this.installationTime.textContent = `Installation Time: ${bimData.installationTime}`;
+        this.fireSafetyRating.textContent = `Fire Safety Rating: ${bimData.fireSafetyRating}`;
+        this.lifeCycle.textContent = `Lifecycle Duration: ${bimData.lifeCycle}`;
+        this.material.textContent = `Material and Texture: ${bimData.material}`;
+        this.dimensions.textContent = `Dimensions: ${bimData.dimensions.width}m x ${bimData.dimensions.height}m x ${bimData.dimensions.depth}m`;
 
-        // Inject the calculated distance into the UI!
-        if (clearance === "N/A") {
-            this.distanceVal.textContent = "No walls detected";
-        } else {
-            this.distanceVal.textContent = `${clearance}m`;
-        }
 
         this.panel.classList.remove('hidden');
 

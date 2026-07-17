@@ -23,6 +23,12 @@
             "category": "Chairs",
             "modelPath": "./assets/furnitures/chair.glb",
             "manufacturer": "Springfield Educational Furniture",
+            "cost": "£500",
+            "installationTime": "2 hours",
+            "fireSafetyRating": "A",
+            "lifeCycle": "10 years",
+            "material": "Wood and Leather",
+            "warranty": "5 years",
             "dimensions": {
                 "width": 0.5,
                 "height": 0.8,
@@ -40,9 +46,15 @@
             "category": "Chairs",
             "modelPath": "./assets/furnitures/office-chair.glb",
             "manufacturer": "Springfield Educational Furniture",
+            "cost": "£350",
+            "installationTime": "1 hour",
+            "fireSafetyRating": "A",
+            "lifeCycle": "15 years",
+            "material": "Metal and Leather",
+            "warranty": "5 years",
             "dimensions": {
-                "width": 0.5,
-                "height": 0.8,
+                "width": 0.3,
+                "height": 1.2,
                 "depth": 0.5
             },
             "physics": {
@@ -57,6 +69,12 @@
             "category": "Chairs",
             "modelPath": "./assets/furnitures/arm-chair.glb",
             "manufacturer": "Springfield Educational Furniture",
+            "cost": "£700",
+            "installationTime": "2 hours",
+            "fireSafetyRating": "A",
+            "lifeCycle": "10 years",
+            "material": "Wood and Cotton",
+            "warranty": "5 years",
             "dimensions": {
                 "width": 0.5,
                 "height": 0.8,
@@ -74,6 +92,12 @@
             "category": "Desks",
             "modelPath": "./assets/furnitures/flat-top-table.glb",
             "manufacturer": "Springfield Educational Furniture",
+            "cost": "£200",
+            "installationTime": "1 hour",
+            "fireSafetyRating": "C",
+            "lifeCycle": "5 years",
+            "material": "Mahogany Wood",
+            "warranty": "3 years",
             "dimensions": {
                 "width": 0.5,
                 "height": 0.8,
@@ -91,15 +115,67 @@
             "category": "Desks",
             "modelPath": "./assets/furnitures/round-top-table.glb",
             "manufacturer": "Springfield Educational Furniture",
+            "cost": "£200",
+            "installationTime": "30 minutes",
+            "fireSafetyRating": "B",
+            "lifeCycle": "6 years",
+            "material": "Hardwood",
+            "warranty": "3 years",
             "dimensions": {
-                "width": 0.5,
-                "height": 0.8,
-                "depth": 0.5
+                "width": 0.25,
+                "height": 0.3,
+                "depth": 0.3
             },
             "physics": {
                 "mass": 5,
                 "snapToFloor": true,
                 "collisionRadius": 0.3
+            }
+        },
+        {
+            "id": "storage_01",
+            "name": "Storage Cabinet",
+            "category": "Storage",
+            "modelPath": "./assets/furnitures/storage-cabinet.glb",
+            "manufacturer": "Springfield Educational Furniture",
+            "cost": "£400",
+            "installationTime": "1 hour",
+            "fireSafetyRating": "A",
+            "lifeCycle": "12 years",
+            "material": "Hardwood",
+            "warranty": "5 years",
+            "dimensions": {
+                "width": 0.8,
+                "height": 0.5,
+                "depth": 0.4
+            },
+            "physics": {
+                "mass": 10,
+                "snapToFloor": true,
+                "collisionRadius": 0.2
+            }
+        },
+        {
+            "id": "storage_02",
+            "name": "Storage Shelf",
+            "category": "Storage",
+            "modelPath": "./assets/furnitures/high-shelf.glb",
+            "manufacturer": "Springfield Educational Furniture",
+            "cost": "£300",
+            "installationTime": "45 minutes",
+            "fireSafetyRating": "B",
+            "lifeCycle": "8 years",
+            "material": "Hardwood",
+            "warranty": "3 years",
+            "dimensions": {
+                "width": 0.6,
+                "height": 1.2,
+                "depth": 0.4
+            },
+            "physics": {
+                "mass": 8,
+                "snapToFloor": true,
+                "collisionRadius": 0.20
             }
         }
     ]

@@ -114,11 +114,19 @@ body {
     color: #333;
 }
 
-#hud-manufacturer {
+.hud {
     margin: 0 0 10px 0;
     font-size: 12px;
     color: #666;
     font-style: italic;
+}
+
+#hud-manufacturer {
+
+}
+
+#hud-cost {
+
 }
 
 #hud-distance {
