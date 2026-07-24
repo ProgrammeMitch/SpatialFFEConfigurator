@@ -11,6 +11,7 @@ import { StateManager } from './state/StateManager.js';
 import { WebXRManager } from './core/WebXRManager.js';
 import { HUD } from './ui/HUD.js';
 import { PDFGenerator } from './export/PDFGenerator.js';
+import { TutorialManager } from './ui/TutorialManager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Springfield VR Planner: Initializing...');
@@ -254,6 +255,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. Broadcast that the system is online
     globalEventBus.emit('SYSTEM_READY', { status: 'Online' });
     console.log('Springfield VR Planner: Engine Running.');
+
+    // --- LAUNCH FIRST-TIME TUTORIAL ---
+    // Make sure your HTML IDs for the space selector and catalog match the ones in TutorialManager.js
+    setTimeout(() => {
+        const tutorial = new TutorialManager();
+    }, 1000); // 1-second delay ensures the VRButton and DOM have fully rendered
 
     // --- DESKTOP ESCAPE HATCH ---
     // Allows desktop users trapped in VR mode to exit by hitting the Escape key.

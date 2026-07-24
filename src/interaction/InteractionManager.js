@@ -113,7 +113,7 @@ export class InteractionManager {
         // 1. Create an invisible 2D Canvas in memory
         const canvas = document.createElement('canvas');
         canvas.width = 512;
-        canvas.height = 256;
+        canvas.height = 512;
         this.vrCanvasContext = canvas.getContext('2d');
 
         // 2. Convert it into a Three.js Texture
@@ -142,34 +142,40 @@ export class InteractionManager {
         const ctx = this.vrCanvasContext;
 
         // Clear the old drawing
-        ctx.clearRect(0, 0, 512, 256);
+        ctx.clearRect(0, 0, 512, 512);
 
         // Draw Dark Background with rounded corners
         ctx.fillStyle = 'rgba(34, 34, 34, 0.9)';
         ctx.beginPath();
-        ctx.roundRect(0, 0, 512, 256, 16);
+        ctx.roundRect(0, 0, 512, 512, 16);
         ctx.fill();
 
         // Draw Springfield Green Border
         ctx.strokeStyle = '#149650';
         ctx.lineWidth = 10;
-        ctx.strokeRect(0, 0, 512, 256);
+        ctx.strokeRect(0, 0, 512, 512);
 
         // Draw Text
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 36px sans-serif';
-        ctx.fillText(bimData.name || 'Selected Item', 30, 60);
+        ctx.fillText(bimData.name || 'Selected Item', 30, 90);
 
         ctx.fillStyle = '#aaaaaa';
         ctx.font = '28px sans-serif';
-        ctx.fillText(`Mfg: ${bimData.manufacturer || 'Springfield'}`, 30, 110);
-        ctx.fillText(`Cat: ${bimData.category || 'N/A'}`, 30, 150);
+        ctx.fillText(`Mfg: ${bimData.manufacturer || 'Springfield'}`, 30, 150);
+        ctx.fillText(`Cat: ${bimData.category || 'N/A'}`, 30, 190);
+        ctx.fillText(`Cost: ${bimData.cost || 'N/A'}`, 30, 230);
+        ctx.fillText(`Material: ${bimData.material || 'N/A'}`, 30, 270);
+        ctx.fillText(`Installation Time: ${bimData.installationTime || 'N/A'}`, 30, 310);
+        ctx.fillText(`Fire Safety Rating: ${bimData.fireSafetyRating || 'N/A'}`, 30, 350);
+        ctx.fillText(`Life Cycle: ${bimData.lifeCycle || 'N/A'}`, 30, 390);
+        ctx.fillText(`Warranty: ${bimData.warranty || 'N/A'}`, 30, 430);
 
         // Draw Clearance Distance (BULLETPROOF PARSING)
         ctx.fillStyle = '#ffb300'; // High-visibility Amber
         const validClearance = parseFloat(clearance);
         const distText = !isNaN(validClearance) ? validClearance.toFixed(2) + 'm' : '--';
-        ctx.fillText(`Clearance: ${distText}`, 30, 210);
+        ctx.fillText(`Clearance: ${distText}`, 30, 480);
 
         // Crucial: Tell the GPU to update the image!
         this.vrTexture.needsUpdate = true;
