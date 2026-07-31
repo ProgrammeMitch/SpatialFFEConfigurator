@@ -7,12 +7,12 @@ export class TutorialManager {
         this.currentListener = null;
         this.currentTarget = null;
         this.currentEventType = null;
-        
+
         // State Machine Definition
         this.steps = [
             {
                 // Step 1
-                targetId: 'room-items-container', 
+                targetId: 'room-items-container',
                 text: "Select A Classroom",
                 position: 'right',
                 trigger: 'click', // Auto-advances when clicked
@@ -20,7 +20,7 @@ export class TutorialManager {
             },
             {
                 // Step 2
-                targetId: 'furniture-wrapper', 
+                targetId: 'furniture-wrapper',
                 text: "Select Furniture to populate the classroom",
                 position: 'right',
                 trigger: 'click', // Auto-advances when clicked
@@ -39,7 +39,7 @@ export class TutorialManager {
                 targetId: 'webgl-container',
                 text: "Left Click Mouse: Drag Furniture to desired setting\n\nClick Furniture then Drag yellow arrow left and right to change direction of furniture",
                 position: 'center',
-                trigger: 'manual', 
+                trigger: 'manual',
                 allowCanvas: true
             },
             {
@@ -60,7 +60,7 @@ export class TutorialManager {
             },
             {
                 // Step 7: Enter VR
-                targetId: 'VRButton', 
+                targetId: 'VRButton',
                 text: "Click here to enter VR Mode",
                 position: 'left',
                 trigger: 'manual', // Kept manual in case VR isn't supported, so they can just click Finish
@@ -79,7 +79,7 @@ export class TutorialManager {
 
         this.tooltip = document.createElement('div');
         this.tooltip.id = 'tutorial-tooltip';
-        
+
         this.tooltipText = document.createElement('p');
         this.tooltip.appendChild(this.tooltipText);
 
@@ -95,12 +95,12 @@ export class TutorialManager {
         this.overlay.style.display = 'block';
         this.overlay.style.pointerEvents = 'auto';
         this.tooltip.style.display = 'flex';
-        
+
         this.tooltip.style.top = '50%';
         this.tooltip.style.left = '50%';
         this.tooltip.style.transform = 'translate(-50%, -50%)';
 
-        this.tooltipText.innerHTML = "<h1>WELCOME TO THE VIISP TOOL DEMO.</h1>";
+        this.tooltipText.innerHTML = `<h1>WELCOME TO THE VIISP TOOL DEMO.</h1>\n<p style="font-size: 10px"><i>The models in this demo were sourced ethically from bimObjects.com, revitcity.com, libraryrevit.com, bimsmith.com, and sketchfab.com</i></p>\n<p style="font-size: 8px; color:red"><i> Special thanks to all the developers and artists who worked hard on them</i></p>`;
         this.nextBtn.innerText = "START";
         this.nextBtn.style.display = 'block';
     }
@@ -138,14 +138,14 @@ export class TutorialManager {
 
         // 5. Position Tooltip
         const rect = targetEl.getBoundingClientRect();
-        this.tooltip.style.transform = 'none'; 
+        this.tooltip.style.transform = 'none';
 
         if (step.position === 'right') {
             this.tooltip.style.top = `${Math.max(rect.top, 20)}px`;
             this.tooltip.style.left = `${rect.right + 20}px`;
         } else if (step.position === 'left') {
             this.tooltip.style.top = `${Math.max(rect.top, 20)}px`;
-            this.tooltip.style.left = `${rect.left - 370}px`; 
+            this.tooltip.style.left = `${rect.left - 370}px`;
         } else if (step.position === 'center') {
             this.tooltip.style.top = `${rect.top + 50}px`;
             this.tooltip.style.left = `50%`;
@@ -171,17 +171,17 @@ export class TutorialManager {
             this.nextBtn.innerText = (this.currentStep === this.steps.length - 1) ? "FINISH" : "GOT IT";
         } else {
             this.nextBtn.style.display = 'none';
-            
+
             // Bind the auto-advance listener to the target DOM element
             const targetEl = document.getElementById(step.targetId);
             if (targetEl) {
                 this.currentTarget = targetEl;
                 this.currentEventType = step.trigger;
-                
+
                 this.currentListener = () => {
                     this.nextStep();
                 };
-                
+
                 // 100ms timeout prevents immediate bubbling that could accidentally skip steps
                 setTimeout(() => {
                     targetEl.addEventListener(step.trigger, this.currentListener, { once: true });
