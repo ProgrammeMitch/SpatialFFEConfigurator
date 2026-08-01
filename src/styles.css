@@ -301,3 +301,126 @@ body {
 #tutorial-next-btn:hover {
     background: #0d753c;
 }
+
+/* --- MOBILE SCREEN BLOCKER --- */
+#mobile-blocker {
+    display: none; /* Hidden by default on desktop */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #222;
+    color: white;
+    z-index: 999999; /* Ensures it sits above absolutely everything */
+    text-align: center;
+    box-sizing: border-box;
+    padding: 30px;
+}
+
+.blocker-content {
+    max-width: 500px;
+    margin: 0 auto;
+    border: 2px solid #ffb300;
+    border-radius: 8px;
+    padding: 30px;
+    background: #333;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.blocker-content h2 {
+    color: #ffb300;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-family: sans-serif;
+    font-size: 24px;
+}
+
+.blocker-content p {
+    font-family: sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+/* 
+  The Trigger: If the screen is 839px or smaller, 
+  turn ON the blocker and turn OFF the application.
+*/
+@media screen and (max-width: 839px) {
+    #mobile-blocker {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* 
+      Hiding the core UI prevents the Three.js canvas from trying to render 
+      or capture touch events in the background, saving battery and memory.
+    */
+    #webgl-container, 
+    #ui-layer, 
+    #sidebar-palette, 
+    #export-controls, 
+    #orbit-controls-panel,
+    #tutorial-overlay,
+    #tutorial-tooltip {
+        display: none !important;
+    }
+}
+
+/* --- COLLAPSIBLE MENU LOGIC --- */
+
+/* Add a hardware-accelerated transition to the existing panels */
+#sidebar-palette, 
+#export-controls {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Ensure the panels don't clip their floating buttons */
+    overflow: visible !important; 
+}
+
+/* The classes JavaScript will toggle */
+.sidebar.collapsed {
+    transform: translateX(-100%);
+}
+
+.top-right-panel.collapsed {
+    transform: translateX(100%);
+}
+
+/* Base styles for the toggle tabs */
+.collapse-toggle-btn {
+    position: absolute;
+    top: 20px;
+    width: 24px;
+    height: 48px;
+    background-color: #222;
+    color: #ffb300;
+    border: 1px solid #ffb300;
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    padding: 0;
+}
+
+.collapse-toggle-btn:hover {
+    background-color: #333;
+}
+
+/* Left button specifically sticks out to the right */
+.left-toggle {
+    right: -24px; 
+    border-left: none;
+    border-radius: 0 6px 6px 0;
+}
+
+/* Right button specifically sticks out to the left */
+.right-toggle {
+    left: -24px; 
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+}

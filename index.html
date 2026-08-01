@@ -25,7 +25,13 @@
 </head>
 
 <body>
-
+    <div id="mobile-blocker">
+        <div class="blocker-content">
+            <h2>Screen Size Not Supported</h2>
+            <p>The VIISP Tool requires a larger screen for spatial planning and 3D rendering.</p>
+            <p>Please Flip your phone to Landscape mode or switch to a desktop, Laptop or VR or any device with a screen width of at least 840px for the best experience.</p>
+        </div>
+    </div>
     <div id="webgl-container"></div>
 
     <div id="ui-layer"></div>
@@ -38,6 +44,8 @@
     <div id="room-selector-screen" class="ui-panel hidden"></div>
 
     <div id="sidebar-palette" class="sidebar hidden">
+
+        <button id="sidebar-toggle-btn" class="collapse-toggle-btn left-toggle">◀</button>
 
         <div class="palette-header" style="background: #222;">Select Space</div>
         <div id="room-items-container" style="padding: 10px; border-bottom: 2px solid #ccc;">
@@ -58,12 +66,19 @@
 
 
     <div id="export-controls" class="top-right-panel hidden">
+
+        <button id="export-toggle-btn" class="collapse-toggle-btn right-toggle">▶</button>
+
         <button id="save-session-btn" class="ui-btn"
             style="margin-bottom: 10px; background: #ffb300; color: #222; width: 80%;">Save Session</button>
 
         <button id="generate-pdf-btn" style="margin-bottom: 10px;  width: 80%;">Finalize and Export PDF</button>
 
-        <div id="hud-panel" class="floating-panel hidden" style="margin-top: 30px; left: 0%; width: 70%;">
+        <button id="reset-scene-btn" class="ui-btn"
+            style="margin-bottom: 10px; width: 80%; background: #d93838; color: white; border-color: #a32a2a;">Reset
+            Scene</button>
+
+        <div id="hud-panel" class="floating-panel hidden" style="margin-top: 90px; left: 0%; width: 72%;">
             <h3 id="hud-title">Item Name</h3>
             <p class="hud" id="hud-manufacturer">Manufacturer</p>
             <p class="hud" id="hud-cost">Cost</p>

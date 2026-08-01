@@ -13,6 +13,88 @@ import { HUD } from './ui/HUD.js';
 import { PDFGenerator } from './export/PDFGenerator.js';
 import { TutorialManager } from './ui/TutorialManager.js';
 
+export function setupCollapsibleMenus() {
+    const sidebar = document.getElementById('sidebar-palette');
+    const sidebarBtn = document.getElementById('sidebar-toggle-btn');
+    
+    if (sidebar && sidebarBtn) {
+        sidebarBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            // Swap the chevron direction based on state
+            sidebarBtn.innerText = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+        });
+    }
+
+    const exportPanel = document.getElementById('export-controls');
+    const exportBtn = document.getElementById('export-toggle-btn');
+
+    if (exportPanel && exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            exportPanel.classList.toggle('collapsed');
+            // Swap the chevron direction based on state
+            exportBtn.innerText = exportPanel.classList.contains('collapsed') ? '◀' : '▶';
+        });
+    }
+}
+
+let initialSceneState = null;
+let globalCatalogCache = null; // Caches the catalog so we can look up models during a reset
+
+export function captureInitialState(loadedData) {
+    initialSceneState = JSON.parse(JSON.stringify(loadedData));
+    console.log("Baseline scene state captured for reset purposes.");
+}
+
+// Added assetManager as a parameter so we can spawn the furniture
+export function setupResetButton(scene, interactionManager, assetManager) {
+    const resetBtn = document.getElementById('reset-scene-btn');
+
+    if (!resetBtn) return;
+
+    resetBtn.addEventListener('click', () => {
+        const confirmReset = confirm("Are you sure you want to reset the scene? Any unsaved changes will be lost.");
+        if (!confirmReset) return;
+
+        const activeItems = interactionManager.getFurnitureItems();
+
+        // Nuke current furniture
+        for (let i = activeItems.length - 1; i >= 0; i--) {
+            const item = activeItems[i];
+
+            if (item.geometry) item.geometry.dispose();
+            if (item.material) {
+                if (Array.isArray(item.material)) {
+                    item.material.forEach(mat => mat.dispose());
+                } else {
+                    item.material.dispose();
+                }
+            }
+            scene.remove(item);
+        }
+        activeItems.length = 0; 
+
+        // THE FIX: The coordinate injection loop
+        if (initialSceneState !== null && globalCatalogCache !== null) {
+            console.log("Restoring scene to initial stakeholder save state...");
+            
+            initialSceneState.furniture.forEach(itemData => {
+                const catalogItem = globalCatalogCache.items.find(item => item.id === itemData.id);
+                if (catalogItem) {
+                    assetManager.loadFurniture(catalogItem, {
+                        position: new THREE.Vector3(itemData.position.x, itemData.position.y, itemData.position.z),
+                        rotationY: itemData.rotationY
+                    });
+                }
+            });
+        } else {
+            console.log("New project detected. Scene cleared.");
+        }
+
+        const hudPanel = document.getElementById('hud-panel');
+        if (hudPanel) hudPanel.classList.add('hidden');
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Springfield VR Planner: Initializing...');
 
@@ -36,12 +118,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // const pdfGenerator = new PDFGenerator(engine, stateManager);
     const environmentManager = new EnvironmentManager(engine.scene, stateManager);
 
+    // Initialize the collapsible menus
+    setupCollapsibleMenus();
+
     // Initialize the Interaction Manager with the active camera (we will handle camera switching inside the manager)
     const interactionManager = new InteractionManager(
         engine.activeCamera,
         engine.scene,
         engine.renderer
     );
+
+    setupResetButton(engine.scene, interactionManager, assetManager);
 
     const xrManager = new WebXRManager(engine.renderer, engine.scene, interactionManager, engine.vrRig);
     const pdfGenerator = new PDFGenerator(engine, stateManager);
@@ -65,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-// --- THE VIRTUAL STUDIO LIGHTING RIG ---
+    // --- THE VIRTUAL STUDIO LIGHTING RIG ---
 
     // 1. The "Sun" (Directional Light)
     // Increased intensity from 3 to 4.5 for a brighter primary beam
@@ -182,6 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
     globalEventBus.on('CATALOG_READY', async (data) => {
         console.log('Main: Catalog ready! Checking URL for cloud sessions...');
 
+        // Save the catalog to our global cache for the reset button to use later
+        globalCatalogCache = data;
+
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('session');
         let clientPresetBlueprint = null;
@@ -200,6 +290,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     const result = await response.json();
                     clientPresetBlueprint = result.record; // JSONBin wraps your data inside a 'record' object
+
+                    // WE MUST ACTUALLY CALL THIS TO LOCK IN THE RESTORE POINT!
+                    captureInitialState(clientPresetBlueprint);
+
                     console.log(`Main: Successfully downloaded blueprint from cloud.`);
                 } else {
                     console.warn(`Main: Cloud session ${sessionId} not found or expired.`);
